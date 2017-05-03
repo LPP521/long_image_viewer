@@ -1,10 +1,14 @@
 # -*- coding:utf-8 -*-
-
+import sys
+from psd_tools import PSDImage
+from PIL.ImageQt import ImageQt
+from PIL import Image
 from PyQt5.QtCore import QDir, Qt
-from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap
+from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap, QMovie, QIcon
 from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QLabel,
-        QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy)
+        QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QWidget)
 from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
+
 
 
 class ImageViewer(QMainWindow):
@@ -31,27 +35,43 @@ class ImageViewer(QMainWindow):
 
         self.setWindowTitle("Image Viewer")
         self.resize(500, 400)
+        self.setWindowIcon(QIcon('./res/Sketch-Icon.png'))
 
     def open(self):
         # 打开图片后根据weight重新调整大小
         fileName, _ = QFileDialog.getOpenFileName(self, "Open File",
                 QDir.currentPath())
         if fileName:
-            image = QImage(fileName)
-            if image.isNull():
-                QMessageBox.information(self, "Image Viewer",
-                        "Cannot load %s." % fileName)
-                return
+            # 如果是webp格式用PIL
+            # 如果是psd用PSDtool
+            # gif格式？
+            fileType = fileName.split('.')[-1]
+            if fileType == 'gif':
+                #QMessageBox.information(self, "file type", "type:%s"%(fileType))
+                self.movie = QMovie(fileName)
+                self.movie.setCacheMode(QMovie.CacheAll)
+                self.movie.setSpeed(100)
+                self.imageLabel.setMovie(self.movie)
+                self.movie.start()
+                if not self.fitToWindowAct.isChecked():
+                    self.imageLabel.adjustSize()
 
-            self.imageLabel.setPixmap(QPixmap.fromImage(image))
-            self.scaleFactor = 1.0
+            else:
+                image = QImage(fileName)
+                if image.isNull():
+                    QMessageBox.information(self, "Image Viewer",
+                            "Cannot load %s." % (fileName))
+                    return
+                self.imageLabel.setPixmap(QPixmap.fromImage(image))
+                self.scaleFactor = 1.0
 
-            self.printAct.setEnabled(True)
-            self.fitToWindowAct.setEnabled(True)
-            self.updateActions()
+                self.printAct.setEnabled(True)
+                self.fitToWindowAct.setEnabled(True)
+                self.updateActions()
 
-            if not self.fitToWindowAct.isChecked():
-                self.imageLabel.adjustSize()
+                if not self.fitToWindowAct.isChecked():
+                    self.imageLabel.adjustSize()
+
 
     def print_(self):
         dialog = QPrintDialog(self.printer, self)
@@ -166,11 +186,7 @@ class ImageViewer(QMainWindow):
         scrollBar.setValue(int(factor * scrollBar.value()
                                 + ((factor - 1) * scrollBar.pageStep()/2)))
 
-
 if __name__ == '__main__':
-
-    import sys
-
     app = QApplication(sys.argv)
     imageViewer = ImageViewer()
     imageViewer.show()
