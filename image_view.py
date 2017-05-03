@@ -56,6 +56,25 @@ class ImageViewer(QMainWindow):
                 if not self.fitToWindowAct.isChecked():
                     self.imageLabel.adjustSize()
 
+            elif fileType == 'psd':
+                img = PSDImage.load(fileName)
+                img = img.as_PIL()
+                img.save('./res/temp.jpg')
+                image = QImage('./res/temp.jpg')
+                if image.isNull():
+                    QMessageBox.information(self, "Image Viewer",
+                            "Cannot load %s." % (fileName))
+                    return
+                self.imageLabel.setPixmap(QPixmap.fromImage(image))
+                self.scaleFactor = 1.0
+
+                self.printAct.setEnabled(True)
+                self.fitToWindowAct.setEnabled(True)
+                self.updateActions()
+
+                if not self.fitToWindowAct.isChecked():
+                    self.imageLabel.adjustSize()
+
             else:
                 image = QImage(fileName)
                 if image.isNull():
