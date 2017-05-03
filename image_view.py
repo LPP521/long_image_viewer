@@ -1,8 +1,10 @@
 # -*- coding:utf-8 -*-
+
 import sys
 from psd_tools import PSDImage
 from PIL.ImageQt import ImageQt
 from PIL import Image
+from PyQt5 import QtSvg
 from PyQt5.QtCore import QDir, Qt
 from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap, QMovie, QIcon
 from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QLabel,
@@ -61,6 +63,28 @@ class ImageViewer(QMainWindow):
                 img = img.as_PIL()
                 img.save('./res/temp.jpg')
                 image = QImage('./res/temp.jpg')
+                if image.isNull():
+                    QMessageBox.information(self, "Image Viewer",
+                            "Cannot load %s." % (fileName))
+                    return
+                self.imageLabel.setPixmap(QPixmap.fromImage(image))
+                self.scaleFactor = 1.0
+
+                self.printAct.setEnabled(True)
+                self.fitToWindowAct.setEnabled(True)
+                self.updateActions()
+
+                if not self.fitToWindowAct.isChecked():
+                    self.imageLabel.adjustSize()
+
+            elif fileType == 'svg':
+                svg = QtSvg.QSvgRenderer(fileName)
+                img = QImage(svg.defaultSize().width(), svg.defaultSize().height(), QImage.Format_ARGB32)
+                p = QPainter(img)
+                svg.render(p)
+                img.save('./res/temp.png')
+                p.end()
+                image = QImage('./res/temp.png')
                 if image.isNull():
                     QMessageBox.information(self, "Image Viewer",
                             "Cannot load %s." % (fileName))
