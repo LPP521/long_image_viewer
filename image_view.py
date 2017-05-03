@@ -5,7 +5,7 @@ from psd_tools import PSDImage
 from PIL.ImageQt import ImageQt
 from PIL import Image
 from PyQt5 import QtSvg
-from PyQt5.QtCore import QDir, Qt
+from PyQt5.QtCore import QDir, Qt, QEvent
 from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap, QMovie, QIcon
 from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QLabel,
         QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QWidget)
@@ -89,6 +89,7 @@ class ImageViewer(QMainWindow):
                     QMessageBox.information(self, "Image Viewer",
                             "Cannot load %s." % (fileName))
                     return
+
                 self.imageLabel.setPixmap(QPixmap.fromImage(image))
                 self.scaleFactor = 1.0
 
@@ -161,6 +162,14 @@ class ImageViewer(QMainWindow):
                 "<p>In addition the example shows how to use QPainter to "
                 "print an image.</p>")
 
+
+    def rgbColor(self):
+        pass
+
+
+    def hexColor(self):
+        pass
+
     def createActions(self):
         self.openAct = QAction("&Open...", self, shortcut="Ctrl+O",
                 triggered=self.open)
@@ -183,6 +192,12 @@ class ImageViewer(QMainWindow):
         self.fitToWindowAct = QAction("&Fit to Window", self, enabled=False,
                 checkable=True, shortcut="Ctrl+F", triggered=self.fitToWindow)
 
+        self.rgbColor = QAction("&RGB Color", self, enabled=False,
+                checkable=True, triggered=self.rgbColor)
+
+        self.hexColor = QAction("&HEX Color", self, enabled=False,
+                checkable=True, triggered=self.hexColor)
+
         self.aboutAct = QAction("&About", self, triggered=self.about)
 
         self.aboutQtAct = QAction("About &Qt", self,
@@ -202,13 +217,19 @@ class ImageViewer(QMainWindow):
         self.viewMenu.addSeparator()
         self.viewMenu.addAction(self.fitToWindowAct)
 
+        self.pickColor = QMenu("&PickColor", self)
+        self.pickColor.addAction(self.rgbColor)
+        self.pickColor.addAction(self.hexColor)
+
         self.helpMenu = QMenu("&Help", self)
         self.helpMenu.addAction(self.aboutAct)
         self.helpMenu.addAction(self.aboutQtAct)
 
         self.menuBar().addMenu(self.fileMenu)
         self.menuBar().addMenu(self.viewMenu)
+        self.menuBar().addMenu(self.pickColor)
         self.menuBar().addMenu(self.helpMenu)
+
 
     def updateActions(self):
         self.zoomInAct.setEnabled(not self.fitToWindowAct.isChecked())
@@ -233,4 +254,35 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     imageViewer = ImageViewer()
     imageViewer.show()
+    app.installEventFilter(imageViewer)
     sys.exit(app.exec_())
+
+
+
+# tool bar 上放一个取色的图标，点击后对图片取色，鼠标所指的地方tooltip一个rgb值
+# 右键复制rgb到剪贴板
+# 获取鼠标的坐标
+
+
+       # if event.buttons() & Qt.LeftButton:
+       #     pointX = event.globalX()
+       #     pointY = event.globalY()
+       #     # img is QImage type
+       #     img = QPixmap.grabWindow(
+       #             QApplication.desktop().winId()).toImage()
+       #     rgb = img.pixel(pointX, pointY)
+       #     #十进制
+       #     red10 = QtGui.qRed(rgb)
+       #     green10 =QtGui.qGreen(rgb)
+       #     blue10 = QtGui.qBlue(rgb)
+       #     color10="("+str(red10)+","+str(green10)+","+str(blue10)+")"
+       #     #十六进制
+       #     #print str(hex(red10))
+       #     red16=str(hex(red10))[2:]
+       #     green16=str(hex(green10))[2]
+       #     blue16=str(hex(blue10))[2:]
+       #     color16=red16+green16+blue16
+       #     #print color16
+       #     print "(%s,%s) = %s (%s,%s,%s)" % (pointX, pointY, color16,red10, green10, blue10)
+       #     self.label.setText("(%s,%s) = %s (%s,%s,%s)" % (pointX, pointY, color16,red10, green10, blue10))
+
